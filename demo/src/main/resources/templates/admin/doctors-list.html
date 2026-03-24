@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Bác sĩ - Admin</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+        }
+        
+        .navbar {
+            background-color: #2c3e50;
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .navbar h1 {
+            font-size: 24px;
+        }
+        
+        .navbar-right {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        .navbar-right a, .navbar-right button {
+            color: white;
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .navbar-right a:hover, .navbar-right button:hover {
+            background-color: #34495e;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        h2 {
+            color: #2c3e50;
+        }
+        
+        .btn-new {
+            background-color: #27ae60;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: background-color 0.3s;
+        }
+        
+        .btn-new:hover {
+            background-color: #229954;
+        }
+        
+        .table-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th {
+            background-color: #34495e;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .doctor-image {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-edit {
+            background-color: #f39c12;
+            color: white;
+        }
+        
+        .btn-edit:hover {
+            background-color: #e67e22;
+        }
+        
+        .btn-delete {
+            background-color: #e74c3c;
+            color: white;
+        }
+        
+        .btn-delete:hover {
+            background-color: #c0392b;
+        }
+        
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <h1>🏥 Clinic Appointment - Admin</h1>
+        <div class="navbar-right">
+            <span>Xin chào: <strong sec:authentication="name"></strong></span>
+            <a href="/home">Trang chủ</a>
+            <a href="/admin/doctors">Quản lý Bác sĩ</a>
+            <form action="/logout" method="post" style="display:inline;">
+                <button type="submit">Đăng xuất</button>
+            </form>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="header">
+            <h2>📋 Quản lý Bác sĩ</h2>
+            <a href="/admin/doctors/new" class="btn-new">+ Thêm Bác sĩ mới</a>
+        </div>
+        
+        <div th:if="${param.success}" class="alert">
+            ✓ Thành công!
+        </div>
+        
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Hình ảnh</th>
+                        <th>Tên Bác sĩ</th>
+                        <th>Chuyên khoa</th>
+                        <th>Khoa</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="doctor : ${doctors}">
+                        <td th:text="${doctor.id}"></td>
+                        <td>
+                            <img th:if="${doctor.image}" th:src="${doctor.image}" alt="Doctor" class="doctor-image">
+                            <img th:unless="${doctor.image}" src="https://via.placeholder.com/50" alt="No image" class="doctor-image">
+                        </td>
+                        <td th:text="${doctor.name}"></td>
+                        <td th:text="${doctor.specialty}"></td>
+                        <td th:text="${doctor.department.name}"></td>
+                        <td>
+                            <div class="actions">
+                                <a th:href="@{/admin/doctors/{id}(id=${doctor.id})}" class="btn btn-edit">✏️ Sửa</a>
+                                <a th:href="@{/admin/doctors/{id}/delete(id=${doctor.id})}" class="btn btn-delete" onclick="return confirm('Bạn chắc chắn muốn xóa?')">🗑️ Xóa</a>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

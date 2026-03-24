@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đặt lịch khám - Clinic Appointment</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+        }
+        
+        .navbar {
+            background-color: #2c3e50;
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .navbar h1 {
+            font-size: 24px;
+        }
+        
+        .navbar-right {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .navbar-right a, .navbar-right button {
+            color: white;
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .navbar-right a:hover, .navbar-right button:hover {
+            background-color: #34495e;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        
+        .form-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        
+        h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .doctor-info {
+            background-color: #e8f4f8;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .doctor-info p {
+            margin: 8px 0;
+            color: #2c3e50;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        
+        input[type="datetime-local"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #bdc3c7;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 5px rgba(52, 152, 219, 0.1);
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-submit {
+            background-color: #27ae60;
+            color: white;
+            flex: 1;
+        }
+        
+        .btn-submit:hover {
+            background-color: #229954;
+        }
+        
+        .btn-cancel {
+            background-color: #95a5a6;
+            color: white;
+            flex: 1;
+        }
+        
+        .btn-cancel:hover {
+            background-color: #7f8c8d;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <h1>Clinic Appointment</h1>
+        <div class="navbar-right">
+            <a href="/home">← Quay lại</a>
+            <form action="/logout" method="post" style="display:inline;">
+                <button type="submit">Đăng xuất</button>
+            </form>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="form-container">
+            <h2>Đặt lịch khám</h2>
+            
+            <div class="doctor-info">
+                <p><strong>Bác sĩ:</strong> <span th:text="${doctor.name}"></span></p>
+                <p><strong>Chuyên khoa:</strong> <span th:text="${doctor.specialty}"></span></p>
+                <p><strong>Khoa:</strong> <span th:text="${doctor.department.name}"></span></p>
+            </div>
+            
+            <form th:object="${appointment}" th:action="@{/appointments/book/{id}(id=${doctor.id})}" method="post">
+                <div class="form-group">
+                    <label for="appointmentDate">Chọn ngày khám:</label>
+                    <input type="datetime-local" id="appointmentDate" th:field="*{appointmentDate}" required>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-submit">✓ Đặt lịch</button>
+                    <a href="/home" class="btn btn-cancel"> Hủy</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
