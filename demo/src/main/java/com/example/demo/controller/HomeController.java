@@ -4,7 +4,11 @@ import com.example.demo.model.Doctor;
 import com.example.demo.service.DoctorService;
 import com.example.demo.dto.DoctorDTO;
 import com.example.demo.dto.DepartmentDTO;
+import com.example.demo.dto.PageDTO;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -39,16 +43,22 @@ public class HomeController {
     
     @GetMapping("/api/search-doctors")
     @ResponseBody
-    public List<DoctorDTO> searchDoctorsAjax(@RequestParam(value = "keyword", required = false, defaultValue = "") String keyword) {
-        List<Doctor> doctors;
+    public PageDTO<DoctorDTO> searchDoctorsAjax(
+            @RequestParam(value = "keyword", required = false, defaultValue = "") String keyword,
+            @RequestParam(value = "page", required = false, defaultValue = "0") int page) {
+        
+        int pageSize = 5;
+        Pageable pageable = PageRequest.of(page, pageSize);
+        
+        Page<Doctor> doctorsPage;
         if (keyword.trim().isEmpty()) {
-            doctors = doctorService.getAllDoctors();
+            doctorsPage = doctorService.getAllDoctorsPaged(pageable);
         } else {
-            doctors = doctorService.searchDoctorsByName(keyword);
+            doctorsPage = doctorService.searchDoctorsByNamePaged(keyword, pageable);
         }
         
         // Convert to DTO
-        return doctors.stream()
+        List<DoctorDTO> dtoList = doctorsPage.getContent().stream()
             .map(doc -> new DoctorDTO(
                 doc.getId(),
                 doc.getName(),
@@ -59,5 +69,14 @@ public class HomeController {
                     null
             ))
             .collect(Collectors.toList());
+        
+        PageDTO<DoctorDTO> pageDTO = new PageDTO<>();
+        pageDTO.setContent(dtoList);
+        pageDTO.setCurrentPage(page);
+        pageDTO.setTotalPages(doctorsPage.getTotalPages());
+        pageDTO.setTotalElements(doctorsPage.getTotalElements());
+        pageDTO.setPageSize(pageSize);
+        
+        return pageDTO;
     }
 }

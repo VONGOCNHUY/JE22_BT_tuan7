@@ -222,13 +222,17 @@
     </div>
     
     <script>
+        let currentPage = 0;
+        let currentKeyword = '';
+        
         // Get current user's role from template if available
         const isPatient = document.documentElement.getAttribute('data-role') === 'PATIENT';
         const isAdmin = document.documentElement.getAttribute('data-role') === 'ADMIN';
         
         // Render doctors table using JavaScript
-        function renderDoctorsTable(doctors) {
+        function renderDoctorsTable(pageData) {
             const container = document.getElementById('doctorsTable');
+            const doctors = pageData.content || [];
             
             if (!doctors || doctors.length === 0) {
                 container.innerHTML = `
@@ -282,6 +286,37 @@
                 </table>
             `;
             
+            // Add pagination controls
+            if (pageData.totalPages > 1) {
+                html += `
+                    <div style="display: flex; justify-content: center; gap: 10px; margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 4px;">
+                        <button id="prevBtn" style="padding: 8px 15px; background-color: ${currentPage === 0 ? '#ccc' : '#3498db'}; color: white; border: none; border-radius: 4px; cursor: ${currentPage === 0 ? 'not-allowed' : 'pointer'};" ${currentPage === 0 ? 'disabled' : ''}>← Trang trước</button>
+                        <span style="padding: 8px 15px; font-weight: bold;">Trang ${currentPage + 1} / ${pageData.totalPages}</span>
+                        <button id="nextBtn" style="padding: 8px 15px; background-color: ${currentPage === pageData.totalPages - 1 ? '#ccc' : '#3498db'}; color: white; border: none; border-radius: 4px; cursor: ${currentPage === pageData.totalPages - 1 ? 'not-allowed' : 'pointer'};" ${currentPage === pageData.totalPages - 1 ? 'disabled' : ''}>Trang sau →</button>
+                    </div>
+                `;
+                
+                // Add pagination event listeners after rendering
+                setTimeout(() => {
+                    const prevBtn = document.getElementById('prevBtn');
+                    const nextBtn = document.getElementById('nextBtn');
+                    
+                    if (prevBtn && currentPage > 0) {
+                        prevBtn.addEventListener('click', () => {
+                            currentPage--;
+                            performSearch();
+                        });
+                    }
+                    
+                    if (nextBtn && currentPage < pageData.totalPages - 1) {
+                        nextBtn.addEventListener('click', () => {
+                            currentPage++;
+                            performSearch();
+                        });
+                    }
+                }, 10);
+            }
+            
             container.innerHTML = html;
         }
         
@@ -297,16 +332,17 @@
             return text.replace(/[&<>"']/g, m => map[m]);
         }
         
-        // Perform AJAX search
+        // Perform AJAX search with pagination
         function performSearch() {
             const keyword = document.getElementById('searchInput').value.trim();
+            currentKeyword = keyword;
             const loading = document.getElementById('loading');
             const searchInfo = document.getElementById('searchInfo');
             
             loading.style.display = 'block';
             searchInfo.style.display = 'none';
             
-            fetch(`/api/search-doctors?keyword=${encodeURIComponent(keyword)}`)
+            fetch(`/api/search-doctors?keyword=${encodeURIComponent(keyword)}&page=${currentPage}`)
                 .then(response => {
                     if (!response.ok) throw new Error('Network response error');
                     return response.json();
@@ -316,8 +352,7 @@
                     renderDoctorsTable(data);
                     
                     if (keyword) {
-                        const resultCount = data ? data.length : 0;
-                        searchInfo.innerHTML = `Kết quả tìm kiếm cho: "<strong>${escapeHtml(keyword)}</strong>" (<strong>${resultCount}</strong> kết quả)`;
+                        searchInfo.innerHTML = `Kết quả tìm kiếm cho: "<strong>${escapeHtml(keyword)}</strong>" (<strong>${data.totalElements}</strong> kết quả - ${data.pageSize} trên trang)`;
                         searchInfo.style.display = 'block';
                     }
                 })
@@ -329,7 +364,10 @@
         }
         
         // Event listeners
-        document.getElementById('searchBtn').addEventListener('click', performSearch);
+        document.getElementById('searchBtn').addEventListener('click', () => {
+            currentPage = 0;
+            performSearch();
+        });
         document.getElementById('searchBtn').addEventListener('mouseover', function() {
             this.style.backgroundColor = '#2980b9';
         });
@@ -346,6 +384,7 @@
         
         document.getElementById('searchInput').addEventListener('keypress', function(e) {
             if (e.key === 'Enter' || e.keyCode === 13) {
+                currentPage = 0;
                 performSearch();
             }
         });
@@ -353,6 +392,7 @@
         document.getElementById('clearBtn').addEventListener('click', function() {
             document.getElementById('searchInput').value = '';
             document.getElementById('searchInfo').style.display = 'none';
+            currentPage = 0;
             performSearch();
         });
         
